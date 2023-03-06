@@ -18,7 +18,24 @@ const getContactById = async (contactId) => {
   }
 };
 
-const removeContact = async (contactId) => {};
+const removeContact = async (contactId) => {
+  try {
+    const contactsList = await listContacts();
+
+    const contact = contactsList.find(({ id }) => id === contactId);
+
+    if (contact) {
+      const newContactList = contactsList.map(({ id }) => id !== contactId);
+      await fs.writeFile(
+        "./models/contacts.json",
+        JSON.stringify(newContactList)
+      );
+    }
+    return contact;
+  } catch (error) {
+    return error.message;
+  }
+};
 
 const addContact = async (body) => {
   try {
@@ -31,7 +48,25 @@ const addContact = async (body) => {
   }
 };
 
-const updateContact = async (contactId, body) => {};
+const updateContact = async (contactId, body) => {
+  try {
+    const contactsList = await listContacts();
+
+    const contact = contactsList.find(({ id }) => id === contactId);
+    const idx = contactsList.findIndex(({ id }) => id === contactId);
+
+    if (body.name) contact.name = body.name;
+    if (body.email) contact.email = body.email;
+    if (body.phone) contact.phone = body.phone;
+
+    contactsList.splice(idx, 1, contact);
+
+    await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
+    return contact;
+  } catch (error) {
+    return error.message;
+  }
+};
 
 module.exports = {
   listContacts,
