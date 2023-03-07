@@ -1,9 +1,12 @@
 const express = require("express");
-const validateMiddlewares = require("../../middlewares/validateMiddlewares");
+const {
+  validatePost,
+  validatePut,
+} = require("../../middlewares/validateMiddlewares");
 const uuid = require("uuid").v4;
 const {
   listContacts,
-  getContactById,
+  getById,
   addContact,
   removeContact,
   updateContact,
@@ -11,13 +14,15 @@ const {
 
 const router = express.Router();
 
+// GET /api/contacts
 router.get("/", async (req, res, next) => {
   res.json(await listContacts());
 });
 
+// GET /api/contacts/:id
 router.get("/:contactId", async (req, res, next) => {
   const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+  const contact = await getById(contactId);
   if (contact) {
     res.json(contact);
   } else {
@@ -25,16 +30,16 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-router.post("/", validateMiddlewares.validatePost, async (req, res, next) => {
+// POST /api/contacts
+router.post("/", validatePost, async (req, res, next) => {
   const { name, email, phone } = req.body;
 
   if (name && email && phone) {
     res.status(201).json(await addContact({ id: uuid(), name, email, phone }));
-  } else {
-    res.status(400).json({ message: "missing required name field" });
   }
 });
 
+// DELETE /api/contacts/:id
 router.delete("/:contactId", async (req, res, next) => {
   const { contactId } = req.params;
   const contact = await removeContact(contactId);
@@ -45,14 +50,12 @@ router.delete("/:contactId", async (req, res, next) => {
   }
 });
 
-router.put("/:contactId", async (req, res, next) => {
+// PUT /api/contacts/:id
+router.put("/:contactId", validatePut, async (req, res, next) => {
   const { contactId } = req.params;
   const { name, email, phone } = req.body;
-  // const validate = schemaPut.validate({ name, email, phone });
   if (name || email || phone) {
     res.json(await updateContact(contactId, { name, email, phone }));
-  } else {
-    res.status(400).json({ message: "missing fields" });
   }
 });
 

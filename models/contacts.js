@@ -4,17 +4,17 @@ const listContacts = async () => {
   try {
     return JSON.parse(await fs.readFile("./models/contacts.json"));
   } catch (error) {
-    return error.message;
+    return error;
   }
 };
 
-const getContactById = async (contactId) => {
+const getById = async (contactId) => {
   try {
     const contactsList = await listContacts();
 
     return contactsList.find(({ id }) => id === contactId);
   } catch (error) {
-    return error.message;
+    return error;
   }
 };
 
@@ -33,7 +33,7 @@ const removeContact = async (contactId) => {
     }
     return contact;
   } catch (error) {
-    return error.message;
+    return error;
   }
 };
 
@@ -44,7 +44,7 @@ const addContact = async (body) => {
     await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
     return body;
   } catch (error) {
-    return error.message;
+    return error;
   }
 };
 
@@ -64,13 +64,13 @@ const updateContact = async (contactId, body) => {
     await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
     return contact;
   } catch (error) {
-    return error.message;
+    return error;
   }
 };
 
 module.exports = {
   listContacts,
-  getContactById,
+  getById,
   removeContact,
   addContact,
   updateContact,
