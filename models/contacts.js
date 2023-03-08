@@ -1,66 +1,115 @@
 const fs = require("fs/promises");
+const uuid = require("uuid").v4;
 
-const listContacts = async () => {
+const feachContactsList = async () =>
+  JSON.parse(await fs.readFile("./models/contacts.json"));
+
+/**
+ * Get contacts list
+ * @returns {name:string, email:string, phone:string}[]
+ */
+const listContacts = async (req, res, next) => {
   try {
-    return JSON.parse(await fs.readFile("./models/contacts.json"));
+    return res.json(await feachContactsList());
   } catch (error) {
     return error;
   }
 };
 
-const getById = async (contactId) => {
+/**
+ * Get contsct by ID
+ * @param {string} contactId
+ * @returns {name:string, email:string, phone:string}
+ */
+const getById = async (req, res, next) => {
   try {
-    const contactsList = await listContacts();
+    const { contactId } = req.params;
+    const contactList = await feachContactsList();
 
-    return contactsList.find(({ id }) => id === contactId);
-  } catch (error) {
-    return error;
-  }
-};
-
-const removeContact = async (contactId) => {
-  try {
-    const contactsList = await listContacts();
-
-    const contact = contactsList.find(({ id }) => id === contactId);
-
+    const contact = contactList.find(({ id }) => id === contactId);
     if (contact) {
-      const newContactList = contactsList.map(({ id }) => id !== contactId);
-      await fs.writeFile(
-        "./models/contacts.json",
-        JSON.stringify(newContactList)
-      );
+      return res.json(contact);
     }
-    return contact;
+    return res.status(404).json({ message: "Not found" });
   } catch (error) {
     return error;
   }
 };
 
-const addContact = async (body) => {
+/**
+ * Create contsct
+ * @param {string} name
+ * @param {string} email
+ * @param {string} phone
+ * @returns {name:string, email:string, phone:string}
+ */
+const addContact = async (req, res, next) => {
   try {
-    const contactsList = await listContacts();
-    contactsList.push(body);
+    const { name, email, phone } = req.body;
+    const newContact = { id: uuid(), name, email, phone };
+    const contactsList = await feachContactsList();
+
+    res.status(201).json(newContact);
+
+    contactsList.push(newContact);
     await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
-    return body;
+    return newContact;
   } catch (error) {
     return error;
   }
 };
 
-const updateContact = async (contactId, body) => {
+/**
+ * Delete contact by ID
+ * @param {string} contactId
+ */
+const removeContact = async (req, res, next) => {
   try {
-    const contactsList = await listContacts();
+    const { contactId } = req.params;
+    const contactsList = await feachContactsList();
 
     const contact = contactsList.find(({ id }) => id === contactId);
     const idx = contactsList.findIndex(({ id }) => id === contactId);
 
-    if (body.name) contact.name = body.name;
-    if (body.email) contact.email = body.email;
-    if (body.phone) contact.phone = body.phone;
+    if (contact) {
+      contactsList.splice(idx, 1);
+
+      await fs.writeFile(
+        "./models/contacts.json",
+        JSON.stringify(contactsList)
+      );
+      res.json({ message: "contact deleted" });
+      return;
+    }
+    res.status(404).json({ message: "Not found" });
+  } catch (error) {
+    return error;
+  }
+};
+
+/**
+ * Updata contact by ID
+ * @param {string} name
+ * @param {string} email
+ * @param {string} phone
+ * @returns {name:string, email:string, phone:string}
+ */
+const updateContact = async (req, res, next) => {
+  try {
+    const { contactId } = req.params;
+    const { name, email, phone } = req.body;
+    const contactsList = await feachContactsList();
+
+    const contact = contactsList.find(({ id }) => id === contactId);
+    const idx = contactsList.findIndex(({ id }) => id === contactId);
+
+    if (name) contact.name = name;
+    if (email) contact.email = email;
+    if (phone) contact.phone = phone;
 
     contactsList.splice(idx, 1, contact);
 
+    res.json(contact);
     await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
     return contact;
   } catch (error) {

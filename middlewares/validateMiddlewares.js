@@ -20,38 +20,36 @@ const schemaPut = Joi.object({
   phone: Joi.string().min(3).max(15),
 });
 
-exports.validatePost = async (req, res, next) => {
+const validatePost = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
 
     const validate = schemaPost.validate({ name, email, phone });
     if (!validate.error) return next();
 
-    const error = validate.error;
+    const { message } = validate.error;
+    const msg = message.slice(1, message.lastIndexOf('"'));
 
-    error.status = 400;
-    error.message = "missing required name field";
-
-    next(error);
+    res.status(400).json({ message: `missing required '${msg}' field` });
   } catch (error) {
     next(error);
   }
 };
 
-exports.validatePut = async (req, res, next) => {
+const validatePut = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
+    if (!name && !email && !phone) {
+      return res.status(400).json({ message: "missing fields" });
+    }
 
     const validate = schemaPut.validate({ name, email, phone });
     if (!validate.error) return next();
 
-    const error = new Error(validate.error);
-
-    error.status = 404;
-    error.message = "Not found";
-
-    next(error);
+    res.status(404).json({ message: "Not found" });
   } catch (error) {
     next(error);
   }
 };
+
+module.exports = { validatePost, validatePut };
