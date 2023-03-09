@@ -8,9 +8,9 @@ const feachContactsList = async () =>
  * Get contacts list
  * @returns {name:string, email:string, phone:string}[]
  */
-const listContacts = async (req, res, next) => {
+const listContacts = async (req, res) => {
   try {
-    return res.json(await feachContactsList());
+    return res.status(200).json(await feachContactsList());
   } catch (error) {
     return error;
   }
@@ -21,14 +21,14 @@ const listContacts = async (req, res, next) => {
  * @param {string} contactId
  * @returns {name:string, email:string, phone:string}
  */
-const getById = async (req, res, next) => {
+const getById = async (req, res) => {
   try {
     const { contactId } = req.params;
     const contactList = await feachContactsList();
 
     const contact = contactList.find(({ id }) => id === contactId);
     if (contact) {
-      return res.json(contact);
+      return res.status(200).json(contact);
     }
     return res.status(404).json({ message: "Not found" });
   } catch (error) {
@@ -43,7 +43,7 @@ const getById = async (req, res, next) => {
  * @param {string} phone
  * @returns {name:string, email:string, phone:string}
  */
-const addContact = async (req, res, next) => {
+const addContact = async (req, res) => {
   try {
     const { name, email, phone } = req.body;
     const newContact = { id: uuid(), name, email, phone };
@@ -63,7 +63,7 @@ const addContact = async (req, res, next) => {
  * Delete contact by ID
  * @param {string} contactId
  */
-const removeContact = async (req, res, next) => {
+const removeContact = async (req, res) => {
   try {
     const { contactId } = req.params;
     const contactsList = await feachContactsList();
@@ -78,7 +78,7 @@ const removeContact = async (req, res, next) => {
         "./models/contacts.json",
         JSON.stringify(contactsList)
       );
-      res.json({ message: "contact deleted" });
+      res.status(200).json({ message: "contact deleted" });
       return;
     }
     res.status(404).json({ message: "Not found" });
@@ -94,7 +94,7 @@ const removeContact = async (req, res, next) => {
  * @param {string} phone
  * @returns {name:string, email:string, phone:string}
  */
-const updateContact = async (req, res, next) => {
+const updateContact = async (req, res) => {
   try {
     const { contactId } = req.params;
     const { name, email, phone } = req.body;

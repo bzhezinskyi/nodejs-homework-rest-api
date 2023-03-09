@@ -13,19 +13,11 @@ const {
 
 const router = express.Router();
 
-// GET /api/contacts
 router.get("/", listContacts);
-
-// GET /api/contacts/:id
-router.get("/:contactId", getById);
-
-// POST /api/contacts
 router.post("/", validatePost, addContact);
 
-// DELETE /api/contacts/:id
+router.get("/:contactId", getById);
 router.delete("/:contactId", removeContact);
-
-// PUT /api/contacts/:id
 router.put("/:contactId", validatePut, updateContact);
 
 module.exports = router;
