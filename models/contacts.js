@@ -109,7 +109,7 @@ const updateContact = async (req, res) => {
 
     contactsList.splice(idx, 1, contact);
 
-    res.json(contact);
+    res.status(200).json(contact);
     await fs.writeFile("./models/contacts.json", JSON.stringify(contactsList));
     return contact;
   } catch (error) {
