@@ -9,11 +9,10 @@ const getContactById = catchAsync(async (req, res) => {
   const { contactId } = req.params;
 
   const contact = await contactsService.getById(contactId);
-  if (contact) {
-    res.status(200).json(contact);
-  } else {
-    res.status(404).json({ message: "Not found" });
+  if (!contact) {
+    return res.status(404).json({ message: "Not found" });
   }
+  res.status(200).json(contact);
 });
 
 const createContact = catchAsync(async (req, res) => {
@@ -32,12 +31,12 @@ const deleteContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
 
   const contact = await contactsService.getById(contactId);
-  if (contact) {
-    await contactsService.removeContact(contactId);
-    res.status(200).json({ message: "contact deleted" });
-  } else {
-    res.status(404).json({ message: "Not found" });
+  if (!contact) {
+    return res.status(404).json({ message: "Not found" });
   }
+
+  await contactsService.removeContact(contactId);
+  res.status(200).json({ message: "contact deleted" });
 });
 
 const updateContactById = catchAsync(async (req, res) => {
@@ -45,24 +44,27 @@ const updateContactById = catchAsync(async (req, res) => {
   const { name, email, phone } = req.body;
 
   const contact = await contactsService.getById(contactId);
-  if (contact) {
-    if (name) contact.name = name;
-    if (email) contact.email = email;
-    if (phone) contact.phone = phone;
-
-    await contactsService.updateContact(contactId, contact);
-    res.status(200).json(contact);
-  } else {
-    res.status(404).json({ message: "Not found" });
+  if (!contact) {
+    return res.status(404).json({ message: "Not found" });
   }
+  if (name) contact.name = name;
+  if (email) contact.email = email;
+  if (phone) contact.phone = phone;
+
+  await contactsService.updateContact(contactId, contact);
+  res.status(200).json(contact);
 });
 
 const updateFavoriteStatusContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
   const { favorite } = req.body;
 
+  const contact = await contactsService.getById(contactId);
+  if (!contact) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
   if (req.body !== {} && (favorite === false || favorite === true)) {
-    const contact = await contactsService.getById(contactId);
     contact.favorite = favorite;
 
     await contactsService.updateStatusContact(contactId, contact);
