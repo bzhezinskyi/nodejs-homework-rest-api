@@ -1,12 +1,8 @@
 const Contacts = require("./schemas/contacts.shemas");
 
-const listContacts = () => Contacts.find();
+const listContacts = (userId) => Contacts.find({ owner: userId });
 
-const getById = async (contactId) => {
-  return Contacts.findById(contactId);
-  // const contactsList = await listContacts();
-  // return contactsList.find(({ id }) => id === contactId);
-};
+const getById = (contactId) => Contacts.findById(contactId);
 
 const addContact = (body) => Contacts.create(body);
 
