@@ -1,6 +1,7 @@
 const Contacts = require("./schemas/contacts.shemas");
 
-const listContacts = (userId) => Contacts.find({ owner: userId });
+const listContacts = (findOptions, limit, skip) =>
+  Contacts.find(findOptions).skip(skip).limit(limit);
 
 const getById = (contactId) => Contacts.findById(contactId);
 

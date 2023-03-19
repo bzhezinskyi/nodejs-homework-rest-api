@@ -48,4 +48,36 @@ const currentUsers = catchAsync(async (req, res) => {
     .json({ email: req.user.email, subscription: req.user.subscription });
 });
 
-module.exports = { registUsers, loginUsers, logoutUsers, currentUsers };
+const updateSubscriptionStatusUser = catchAsync(async (req, res) => {
+  const { subscription } = req.query;
+  const { user } = req;
+
+  if (
+    subscription !== "starter" &&
+    subscription !== "pro" &&
+    subscription !== "business"
+  ) {
+    return res.status(400).json({
+      message: `Invalid value subscription - '${subscription}'. The subscript must have one of the following values: 'starter', 'pro', 'business'`,
+    });
+  }
+  if (subscription === user.subscription)
+    return res
+      .status(400)
+      .json({ message: `User subscription - '${subscription}'` });
+
+  const updateUser = await Users.findByIdAndUpdate(user._id, {
+    subscription: subscription,
+  });
+
+  updateUser.subscription = subscription;
+  res.status(200).json(updateUser);
+});
+
+module.exports = {
+  registUsers,
+  loginUsers,
+  logoutUsers,
+  currentUsers,
+  updateSubscriptionStatusUser,
+};
