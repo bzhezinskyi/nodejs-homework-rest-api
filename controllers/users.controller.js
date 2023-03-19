@@ -27,12 +27,12 @@ const loginUsers = catchAsync(async (req, res) => {
   const user = await Users.findOne({ email: dataUser.email });
 
   if (!user || !(await bcrypt.compare(dataUser.password, user.password))) {
-    return res.status(409).json({ message: "Email or password is wrong" });
+    return res.status(401).json({ message: "Email or password is wrong" });
   }
 
   const token = jwt.sign(user.id, process.env.JWT_SECRET || "secret");
 
-  res.status(201).json({
+  res.status(200).json({
     token,
     user: { email: user.email, subscription: user.subscription },
   });
