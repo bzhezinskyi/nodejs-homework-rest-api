@@ -1,9 +1,9 @@
 const express = require("express");
 
 const {
-  validatePost,
-  validatePut,
-} = require("../../middlewares/validateMiddlewares");
+  validateContactsCreate,
+  validateContactsUpdata,
+} = require("../../middlewares/validateContacts.middlewares");
 const {
   getContactsList,
   getContactById,
@@ -11,18 +11,27 @@ const {
   createContact,
   updateContactById,
   updateFavoriteStatusContact,
-} = require("../../controllers/contactsController");
+} = require("../../controllers/contacts.controller");
+const { validToken } = require("../../middlewares/validToken.middlewares");
 
 const router = express.Router();
 
-router.route("/").get(getContactsList).post(validatePost, createContact);
+router
+  .route("/")
+  .all(validToken)
+  .get(getContactsList)
+  .post(validateContactsCreate, createContact);
 
 router
   .route("/:contactId")
+  .all(validToken)
   .get(getContactById)
   .delete(deleteContact)
-  .put(validatePut, updateContactById);
+  .put(validateContactsUpdata, updateContactById);
 
-router.route("/:contactId/favorite").patch(updateFavoriteStatusContact);
+router
+  .route("/:contactId/favorite")
+  .all(validToken)
+  .patch(updateFavoriteStatusContact);
 
 module.exports = router;

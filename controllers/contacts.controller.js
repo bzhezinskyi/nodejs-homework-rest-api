@@ -2,7 +2,19 @@ const catchAsync = require("../utils/catchAsync");
 const contactsService = require("../service/contacts.service");
 
 const getContactsList = catchAsync(async (req, res) => {
-  res.status(200).json(await contactsService.listContacts());
+  const { page = 1, limit = 5, favorite } = req.query;
+  const userId = req.user._id;
+
+  const findOptions = favorite
+    ? { owner: userId, favorite }
+    : { owner: userId };
+  console.log(findOptions);
+
+  const skip = (+page - 1) * +limit;
+
+  res
+    .status(200)
+    .json(await contactsService.listContacts(findOptions, limit, skip));
 });
 
 const getContactById = catchAsync(async (req, res) => {
@@ -16,12 +28,15 @@ const getContactById = catchAsync(async (req, res) => {
 });
 
 const createContact = catchAsync(async (req, res) => {
+  const userId = req.user._id;
   const { name, email, phone, favorite = false } = req.body;
+
   const newContact = await contactsService.addContact({
     name,
     email,
     phone,
     favorite,
+    owner: userId,
   });
 
   res.status(201).json(newContact);
