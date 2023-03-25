@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 dotenv.config({ path: "./.env" });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 const databaseUrl = process.env.MONGODB_URL || "mongodb://127.0.0.1:27017/test";
 
 const app = require("./app");

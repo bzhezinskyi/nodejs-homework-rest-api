@@ -1,6 +1,7 @@
-const catchAsync = require("../utils/catchAsync");
+const { catchAsync } = require("../utils");
 const contactsService = require("../service/contacts.service");
 
+//  GET /api/contacts
 const getContactsList = catchAsync(async (req, res) => {
   const { page = 1, limit = 5, favorite } = req.query;
   const userId = req.user._id;
@@ -17,6 +18,7 @@ const getContactsList = catchAsync(async (req, res) => {
     .json(await contactsService.listContacts(findOptions, limit, skip));
 });
 
+//  GET /api/contacts/:contactId
 const getContactById = catchAsync(async (req, res) => {
   const { contactId } = req.params;
 
@@ -27,6 +29,7 @@ const getContactById = catchAsync(async (req, res) => {
   res.status(200).json(contact);
 });
 
+//  POST /api/contacts
 const createContact = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const { name, email, phone, favorite = false } = req.body;
@@ -42,6 +45,7 @@ const createContact = catchAsync(async (req, res) => {
   res.status(201).json(newContact);
 });
 
+//  DELETE /api/contacts/:contactId
 const deleteContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
 
@@ -54,6 +58,7 @@ const deleteContact = catchAsync(async (req, res) => {
   res.status(200).json({ message: "contact deleted" });
 });
 
+//  PUT /api/contacts/:contactId
 const updateContactById = catchAsync(async (req, res) => {
   const { contactId } = req.params;
   const { name, email, phone } = req.body;
@@ -70,6 +75,7 @@ const updateContactById = catchAsync(async (req, res) => {
   res.status(200).json(contact);
 });
 
+//  PATCH /api/contacts/:contactId/favorite
 const updateFavoriteStatusContact = catchAsync(async (req, res) => {
   const { contactId } = req.params;
   const { favorite } = req.body;
