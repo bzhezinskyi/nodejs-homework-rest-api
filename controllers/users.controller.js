@@ -64,7 +64,7 @@ const currentUsers = catchAsync(async (req, res) => {
 
 //  PATCH /api/users
 const updateSubscriptionStatusUser = catchAsync(async (req, res) => {
-  const { subscription } = req.query;
+  const { subscription } = req.body;
   const { user } = req;
 
   if (
@@ -94,7 +94,7 @@ const changeUsersAvatar = catchAsync(async (req, res) => {
   const { user, file } = req;
   if (!file) return res.status(401).json({ message: "Not authorized" });
 
-  const avatarURL = await UserAvatarService.save(user.email, file);
+  const avatarURL = await UserAvatarService.save(user._id, file);
 
   await Users.findByIdAndUpdate(user._id, {
     avatarURL,
