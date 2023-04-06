@@ -14,24 +14,25 @@ const {
 } = require("../../controllers/contacts.controller");
 const { validToken } = require("../../middlewares/validToken.middlewares");
 
-const router = express.Router();
+//  /api/contacts
+const contactsRouter = express.Router();
 
-router
+contactsRouter
   .route("/")
   .all(validToken)
   .get(getContactsList)
   .post(validateContactsCreate, createContact);
 
-router
+contactsRouter
   .route("/:contactId")
   .all(validToken)
   .get(getContactById)
   .delete(deleteContact)
   .put(validateContactsUpdata, updateContactById);
 
-router
+contactsRouter
   .route("/:contactId/favorite")
   .all(validToken)
   .patch(updateFavoriteStatusContact);
 
-module.exports = router;
+module.exports = contactsRouter;

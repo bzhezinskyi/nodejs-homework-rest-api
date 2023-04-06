@@ -2,25 +2,34 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const Users = require("../service/schemas/users.shemas");
-const catchAsync = require("../utils/catchAsync");
+const { createAvatarByEmail, catchAsync } = require("../utils");
+const UserAvatarService = require("../service/users.service");
 
+//  POST /api/users/register
 const registUsers = catchAsync(async (req, res) => {
-  const dataUser = { ...req.body };
+  if (await Users.findOne({ email: req.body.email })) {
+    return res.status(409).json({ message: "Email in use" });
+  }
+
+  const avatarURL = createAvatarByEmail(req.body.email);
+  const dataUser = { ...req.body, avatarURL };
 
   await bcrypt.hash(dataUser.password, 10).then((hash) => {
     dataUser.password = hash;
   });
 
-  if (await Users.findOne({ email: dataUser.email })) {
-    return res.status(409).json({ message: "Email in use" });
-  }
   const newUser = await Users.create(dataUser);
 
   res.status(201).json({
-    user: { email: newUser.email, subscription: newUser.subscription },
+    user: {
+      email: newUser.email,
+      subscription: newUser.subscription,
+      avatarURL: newUser.avatarURL,
+    },
   });
 });
 
+//  POST /api/users/login
 const loginUsers = catchAsync(async (req, res) => {
   const dataUser = { ...req.body };
 
@@ -34,22 +43,28 @@ const loginUsers = catchAsync(async (req, res) => {
 
   res.status(200).json({
     token,
-    user: { email: user.email, subscription: user.subscription },
+    user: {
+      email: user.email,
+      subscription: user.subscription,
+    },
   });
 });
 
+//  POST /api/users/logout
 const logoutUsers = catchAsync(async (req, res) => {
   res.status(204).json();
 });
 
+//  POST /api/users/current
 const currentUsers = catchAsync(async (req, res) => {
   res
     .status(200)
     .json({ email: req.user.email, subscription: req.user.subscription });
 });
 
+//  PATCH /api/users
 const updateSubscriptionStatusUser = catchAsync(async (req, res) => {
-  const { subscription } = req.query;
+  const { subscription } = req.body;
   const { user } = req;
 
   if (
@@ -74,10 +89,25 @@ const updateSubscriptionStatusUser = catchAsync(async (req, res) => {
   res.status(200).json(updateUser);
 });
 
+//  PATCH /api/users/avatar
+const changeUsersAvatar = catchAsync(async (req, res) => {
+  const { user, file } = req;
+  if (!file) return res.status(401).json({ message: "Not authorized" });
+
+  const avatarURL = await UserAvatarService.save(user._id, file);
+
+  await Users.findByIdAndUpdate(user._id, {
+    avatarURL,
+  });
+
+  res.status(200).json({ avatarURL });
+});
+
 module.exports = {
   registUsers,
   loginUsers,
   logoutUsers,
   currentUsers,
   updateSubscriptionStatusUser,
+  changeUsersAvatar,
 };
