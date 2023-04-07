@@ -1,9 +1,11 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { v4: uuid } = require("uuid");
 
 const Users = require("../service/schemas/users.shemas");
 const { createAvatarByEmail, catchAsync } = require("../utils");
 const UserAvatarService = require("../service/users.service");
+const Email = require("../service/email.service");
 
 //  POST /api/users/register
 const registUsers = catchAsync(async (req, res) => {
@@ -12,13 +14,24 @@ const registUsers = catchAsync(async (req, res) => {
   }
 
   const avatarURL = createAvatarByEmail(req.body.email);
-  const dataUser = { ...req.body, avatarURL };
+  const verificationToken = uuid();
+
+  const dataUser = { ...req.body, avatarURL, verificationToken };
 
   await bcrypt.hash(dataUser.password, 10).then((hash) => {
     dataUser.password = hash;
   });
 
   const newUser = await Users.create(dataUser);
+
+  try {
+    await new Email(
+      newUser,
+      `localhost:${process.env.PORT}/api/users/verify/${verificationToken}`
+    ).sendRegister();
+  } catch (error) {
+    console.log(error);
+  }
 
   res.status(201).json({
     user: {
@@ -37,6 +50,10 @@ const loginUsers = catchAsync(async (req, res) => {
 
   if (!user || !(await bcrypt.compare(dataUser.password, user.password))) {
     return res.status(401).json({ message: "Email or password is wrong" });
+  }
+
+  if (!user.verify) {
+    return res.status(404).json({ message: "User not verification" });
   }
 
   const token = jwt.sign(user.id, process.env.JWT_SECRET || "secret");
@@ -103,6 +120,56 @@ const changeUsersAvatar = catchAsync(async (req, res) => {
   res.status(200).json({ avatarURL });
 });
 
+// GET /api/users/verify/:verificationToken
+const chackVerifyUser = catchAsync(async (req, res) => {
+  const user = await Users.findOne({
+    verificationToken: req.params.verificationToken,
+  });
+
+  if (!user || user.verify) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  user.verificationToken = null;
+  user.verify = true;
+
+  await user.save();
+
+  res.status(200).json({ message: "Verification successful" });
+});
+
+// POST /api/users/verify
+const replayVerifyser = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "missing required field email" });
+  }
+
+  const user = await Users.findOne({ email: email });
+
+  if (user.verify) {
+    return res
+      .status(400)
+      .json({ message: "Verification has already been passed" });
+  }
+
+  user.verificationToken = uuid();
+
+  await user.save();
+
+  try {
+    await new Email(
+      user,
+      `localhost:${process.env.PORT}/api/users/verify/${user.verificationToken}`
+    ).sendRegister();
+  } catch (error) {
+    console.log(error);
+  }
+
+  res.status(200).json({ message: "Verification has already been passed" });
+});
+
 module.exports = {
   registUsers,
   loginUsers,
@@ -110,4 +177,6 @@ module.exports = {
   currentUsers,
   updateSubscriptionStatusUser,
   changeUsersAvatar,
+  chackVerifyUser,
+  replayVerifyser,
 };
