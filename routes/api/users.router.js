@@ -7,6 +7,8 @@ const {
   currentUsers,
   updateSubscriptionStatusUser,
   changeUsersAvatar,
+  chackVerifyUser,
+  replayVerifyser,
 } = require("../../controllers/users.controller");
 const { uploadUserAvatar } = require("../../middlewares/users.middlewares");
 const { validToken } = require("../../middlewares/validToken.middlewares");
@@ -24,5 +26,7 @@ usersRouter
   .route("/avatar")
   .all(validToken)
   .patch(uploadUserAvatar, changeUsersAvatar);
+usersRouter.route("/verify/:verificationToken").get(chackVerifyUser);
+usersRouter.route("/verify").post(replayVerifyser);
 
 module.exports = usersRouter;
